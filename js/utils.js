@@ -12,19 +12,25 @@ function format(number, decimals = 1) {
     const tier = Math.log10(number) / 3 | 0;
     if (tier <= 0) return math.floor(number, decimals).toFixed(decimals);
 
-    if ((gameData.settings.numberNotation == 0 || tier < 3) && (tier < units.length)) {
+    // 1. Define your "point of no return" here
+    const hybridThreshold = 1e21; // Sextillion
+
+    // 2. Logic for SMALL numbers (Standard OR Hybrid-below-threshold)
+    if ((gameData.settings.numberNotation == 0 || (gameData.settings.numberNotation == 3 && number < hybridThreshold) || tier < 3) && (tier < units.length)) {
         const suffix = units[tier];
         const scale = Math.pow(10, tier * 3);
         const scaled = number / scale;
         return math.floor(scaled, decimals).toFixed(decimals) + suffix;
     } else {
-        if (gameData.settings.numberNotation == 1) {
+        // 3. Logic for LARGE numbers (Scientific OR Hybrid-above-threshold)
+        if (gameData.settings.numberNotation == 1 || (gameData.settings.numberNotation == 3 && number >= hybridThreshold)) {
             const exp = Math.log10(number) | 0;
             const scale = Math.pow(10, exp);
             const scaled = number / scale;
             return math.floor(scaled, decimals).toFixed(decimals) + "e" + exp;
         }
         else {
+            // 4. Logic for Engineering (Setting 2)
             const exp = Math.log10(number) / 3 | 0;
             const scale = Math.pow(10, exp * 3);
             const scaled = number / scale;
